@@ -2379,7 +2379,7 @@ DOMContentLoaded.addEventOrExecute(() => {
 
         {% endif %}
 
-        {% if settings.pagination == 'infinite' %}
+        {% if settings.pagination == 'infinite' and not is_brand_promo %}
 
             !function() {
 

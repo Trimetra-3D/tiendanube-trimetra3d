@@ -1,0 +1,119 @@
+.brand-promo {
+  --promo-ink: #202321;
+  --promo-muted: #636963;
+  --promo-line: #dfe3dd;
+  --promo-paper: #f7f8f5;
+  --promo-accent: var(--accent-color, #e30f0f);
+  color: var(--promo-ink);
+  background: #fff;
+  line-height: 1.5;
+}
+.brand-promo *, .brand-promo *::before, .brand-promo *::after { box-sizing: border-box; }
+.brand-promo [hidden] { display: none !important; }
+.brand-promo a { color: inherit; }
+.brand-promo button, .brand-promo select { font: inherit; }
+.brand-promo :is(a, button, select, [tabindex]):focus-visible { outline: 3px solid #35723b; outline-offset: 4px; }
+.brand-promo__wrap { width: min(1320px, 100%); margin-inline: auto; padding-inline: 40px; }
+.brand-promo__hero { background: #f1f1ee; overflow: hidden; }
+.brand-promo__hero-layout { display: grid; grid-template-columns: 1fr 1fr; min-height: 500px; align-items: center; gap: 32px; }
+.brand-promo__hero-copy { padding-block: 58px; position: relative; z-index: 1; }
+.brand-promo__eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .16em; margin: 0 0 14px; }
+.brand-promo__hero .brand-promo__eyebrow { font-size: 15px; letter-spacing: .13em; margin-bottom: 40px; }
+.brand-promo__eyebrow span { padding-inline: 12px; color: #6c7865; }
+.brand-promo__overline { font-size: 13px; margin: 0 0 6px; }
+.brand-promo__hero h1 { display: flex; align-items: center; gap: 20px; font-size: clamp(30px, 3.7vw, 54px); font-weight: 700; line-height: 1.04; letter-spacing: -.055em; margin: 0 0 20px; }
+.brand-promo__nine { font-size: clamp(110px, 13vw, 184px); line-height: .9; letter-spacing: -.07em; color: var(--promo-accent); }
+.brand-promo__hero-copy > p:not([class]) { font-size: 16px; margin-bottom: 28px; }
+.brand-promo__button { display: inline-flex; align-items: center; justify-content: center; gap: 30px; min-height: 48px; border: 1px solid var(--promo-ink); padding: 12px 22px; background: var(--promo-ink); color: #fff !important; font-size: 13px; font-weight: 700; text-decoration: none; cursor: pointer; border-radius: 3px; }
+.brand-promo__button:hover { background: #3a4535; color: #fff; }
+.brand-promo__hero small { display: block; max-width: 400px; font-size: 11px; color: #545e50; margin-top: 18px; }
+.brand-promo__hero-art { position: relative; min-width: 0; height: 430px; display: flex; align-items: center; justify-content: center; }
+.brand-promo__hero-art::before { content: ''; position: absolute; width: 360px; height: 360px; max-width: 90%; border-radius: 50%; background: #e5e5df; }
+.brand-promo__hero-machine { position: relative; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; }
+.brand-promo__hero-machine--bambu { width: 74%; margin-right: auto; }
+.brand-promo__hero-machine--snapmaker { position: absolute; width: 60%; height: 68%; right: -7%; bottom: 12px; }
+.brand-promo__hero-machine--snapmaker:first-child { width: 95%; height: 95%; right: 0; }
+.brand-promo__art-caption { position: absolute; bottom: 4px; right: 0; font-size: 9px; letter-spacing: .18em; color: #5d6855; }
+.brand-promo__benefits { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; margin: 0; padding: 28px 0; gap: 20px; border-bottom: 1px solid var(--promo-line); }
+.brand-promo__benefits li { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.brand-promo__benefits li + li { border-left: 1px solid var(--promo-line); }
+.brand-promo__benefits strong { display: block; font-size: 12px; font-weight: 700; }
+.brand-promo__benefits small, .brand-promo__benefits a { display: inline-block; font-size: 11px; color: var(--promo-muted); }
+.brand-promo__benefits a { padding-block: 10px; margin-block: -10px; min-height: 44px; }
+.brand-promo__icon { width: 24px; height: 24px; fill: currentColor; }
+.brand-promo__section { padding-block: 54px; }
+.brand-promo__section-head { display: flex; justify-content: space-between; align-items: end; flex-wrap: wrap; gap: 20px; margin-bottom: 26px; }
+.brand-promo h2 { font-size: clamp(24px, 2.5vw, 34px); font-weight: 700; line-height: 1.16; letter-spacing: -.035em; margin: 0; }
+.brand-promo__section-head p:not(.brand-promo__eyebrow) { font-size: 13px; color: var(--promo-muted); margin: 12px 0 0; }
+.brand-promo__arrows { display: flex; gap: 8px; }
+.brand-promo__arrows button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--promo-line); border-radius: 50%; background: #fff; cursor: pointer; }
+.brand-promo__arrows button:disabled { opacity: .35; cursor: default; }
+.brand-promo__rail { display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 60px) / 3.5); gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 4px; scrollbar-width: thin; padding: 4px 4px 18px; margin: -4px; }
+.brand-promo__card { min-width: 0; scroll-snap-align: start; }
+.brand-promo__product-link { display: block; height: 100%; text-decoration: none !important; }
+.brand-promo__product-image { position: relative; aspect-ratio: 1; background: var(--promo-paper); overflow: hidden; border-radius: 4px; }
+.brand-promo__product-image img { width: 100%; height: 100%; object-fit: contain; padding: 20px; mix-blend-mode: multiply; transition: transform .25s ease; }
+.brand-promo__product-link:hover img { transform: scale(1.035); }
+.brand-promo__tag { position: absolute; top: 12px; left: 12px; background: #fff; padding: 4px 9px; font-size: 10px; border-radius: 2px; }
+.brand-promo__card h3 { font-size: 14px; font-weight: 400; line-height: 1.45; margin: 16px 0 8px; overflow-wrap: anywhere; }
+.brand-promo__price { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+.brand-promo__cash-price, .brand-promo__installments { font-size: 12px; line-height: 1.5; margin-top: 5px; overflow-wrap: anywhere; }
+.brand-promo__cash-price { color: var(--promo-muted); }
+.brand-promo__installments.item-installments--promo { color: #a93914; }
+.brand-promo__product-cta { display: flex; justify-content: space-between; font-size: 11px; padding-block: 10px; }
+.brand-promo__product-cta span { font-size: 16px; }
+.brand-promo__preorders { padding: 34px; background: #f1f2ee; border-radius: 5px; }
+.brand-promo__preorders .brand-promo__product-image { background: #fff; }
+.brand-promo__text-link { display: inline-flex; align-items: center; min-height: 44px; gap: 12px; font-size: 12px; text-decoration: underline; text-underline-offset: 4px; }
+.brand-promo__catalog { scroll-margin-top: 180px; padding-top: 68px; }
+.brand-promo__filters { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; padding: 20px 0; margin-bottom: 28px; border-block: 1px solid var(--promo-line); }
+.brand-promo__filters label { flex: 1 1 160px; max-width: 260px; font-size: 11px; margin: 0; }
+.brand-promo__filters select { display: block; width: 100%; min-height: 46px; margin-top: 6px; padding: 10px; border: 1px solid var(--promo-line); background: #fff; color: var(--promo-ink); border-radius: 3px; font-size: 13px; }
+.brand-promo__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 24px; }
+.brand-promo__empty { padding: 28px; background: var(--promo-paper); font-size: 14px; }
+.brand-promo__empty a { text-decoration: underline; }
+.brand-promo__pagination { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; padding-top: 40px; }
+.brand-promo__pagination a, .brand-promo__pagination span { min-width: 44px; min-height: 44px; padding-inline: 12px; display: grid; place-items: center; border: 1px solid var(--promo-line); border-radius: 3px; font-size: 13px; }
+.brand-promo__pagination [aria-current] { background: var(--promo-ink); color: #fff; }
+@media (max-width: 900px) {
+  .brand-promo__wrap { padding-inline: 24px; }
+  .brand-promo__hero-layout { gap: 0; min-height: 420px; }
+  .brand-promo__hero-art { height: 320px; }
+  .brand-promo__hero-art::before { width: 260px; height: 260px; }
+  .brand-promo__hero h1 { gap: 12px; }
+  .brand-promo__hero .brand-promo__eyebrow { font-size: 12px; }
+  .brand-promo__benefits { gap: 12px; }
+  .brand-promo__benefits li { gap: 8px; }
+  .brand-promo__benefits strong { font-size: 11px; }
+  .brand-promo__icon { width: 20px; height: 20px; }
+  .brand-promo__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .brand-promo__wrap { padding-inline: 20px; }
+  .brand-promo__hero-layout { grid-template-columns: 1fr; }
+  .brand-promo__hero-copy { padding-block: 32px 0; }
+  .brand-promo__hero .brand-promo__eyebrow { margin-bottom: 24px; }
+  .brand-promo__hero h1 { font-size: 40px; gap: 20px; }
+  .brand-promo__nine { font-size: 132px; }
+  .brand-promo__hero-copy > p:not([class]) { font-size: 14px; margin-bottom: 20px; }
+  .brand-promo__hero-art { height: 265px; margin-block: 12px 20px; }
+  .brand-promo__hero-machine--snapmaker { right: 0; }
+  .brand-promo__benefits { grid-template-columns: 1fr; padding-block: 22px; gap: 18px; }
+  .brand-promo__benefits li { justify-content: start; gap: 14px; }
+  .brand-promo__benefits li + li { border: 0; }
+  .brand-promo__benefits strong { font-size: 12px; }
+  .brand-promo__section { padding-block: 34px; }
+  .brand-promo__rail { grid-auto-columns: 78%; gap: 16px; }
+  .brand-promo__preorders { padding: 24px 16px; margin-inline: -4px; }
+  .brand-promo__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px 14px; }
+  .brand-promo__product-image img { padding: 12px; }
+  .brand-promo__card h3 { font-size: 12px; }
+  .brand-promo__price { font-size: 16px; }
+  .brand-promo__tag { top: 6px; left: 6px; font-size: 9px; }
+  .brand-promo__filters { gap: 12px; }
+  .brand-promo__filters label { flex: 1 1 130px; max-width: none; }
+  .brand-promo__filters .brand-promo__button { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-promo__product-image img { transition: none; }
+}

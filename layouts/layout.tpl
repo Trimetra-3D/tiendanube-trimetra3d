@@ -12,6 +12,7 @@
         {% set custom_page_canonical_path = include('snipplets/custom-pages/page-context.tpl', { mode: 'canonical_path', custom_page_handle: custom_page_handle }) | trim %}
         {% set custom_page_redirect_path = include('snipplets/custom-pages/page-context.tpl', { mode: 'redirect_path', custom_page_handle: custom_page_handle }) | trim %}
         {% set is_single_product_page = template == 'product' %}
+        {% set is_brand_promo = template == 'category' and category.handle == 'snapmaker-bambulab' %}
 
         {% if custom_page_is_custom and custom_page_meta_title %}
             {% set page_title = custom_page_meta_title %}
@@ -79,6 +80,9 @@
 
         <link rel="stylesheet" href="{{ 'css/style-async.scss' | static_url }}" media="print" onload="this.media='all'">
 
+        {% if is_brand_promo %}
+            <link rel="stylesheet" href="{{ 'css/brand-promo.scss' | static_url }}" media="all">
+        {% endif %}
         {% if custom_page_is_custom %}
             <link rel="stylesheet" href="{{ 'css/custom-pages-base.scss' | static_url }}" media="all">
             {% if custom_page_stylesheet %}
@@ -212,8 +216,11 @@
             {% endif %}
         {% endif %}
 
-        {# Google reCAPTCHA on register page #}
+        {% if is_brand_promo %}
+            <script>{% include 'static/js/brand-promo.js.tpl' %}</script>
+        {% endif %}
 
+        {# Google reCAPTCHA on register page #}
         {% if template == 'account.register' %}
             {% if not store.hasContactFormsRecaptcha() %}
                 {{ '//www.google.com/recaptcha/api.js' | script_tag(true) }}

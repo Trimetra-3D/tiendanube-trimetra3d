@@ -2,6 +2,7 @@
 {% set promo_adbar_countdown_start_date = include("snipplets/payment-installments-config.tpl", { mode: "promo_start" }) | trim %}
 {% set promo_adbar_countdown_end_date = include("snipplets/payment-installments-config.tpl", { mode: "promo_end" }) | trim %}
 {% set promo_adbar_countdown_enabled = include("snipplets/payment-installments-config.tpl", { mode: "promo_countdown" }) | trim %}
+{% set promo_adbar_countdown_scope = include("snipplets/payment-installments-config.tpl", { mode: "promo_scope" }) | trim %}
 {% set promo_adbar_countdown_has_not_ended = include("snipplets/payment-installments-config.tpl", { mode: "promo_has_not_ended" }) | trim %}
 {% set promo_adbar_countdown = promo_adbar_countdown_enabled == "true" and promo_adbar_countdown_has_not_ended == "true" %}
 {% set promo_adbar_countdown_start = promo_adbar_countdown_start_date %}
@@ -19,7 +20,8 @@
 {% set both_images_without_messages = 'adbar_img_mobile.jpg' | has_custom_image and 'adbar_img_desktop.jpg' | has_custom_image and not num_messages %}
 
 {% if promo_adbar_countdown %}
-    <section
+    <a
+        href="https://www.trimetra3d.com.ar/snapmaker-bambulab"
         class="js-adbar section-adbar section-adbar--countdown"
         data-adbar-countdown
         data-adbar-countdown-start="{{ promo_adbar_countdown_start }}"
@@ -28,7 +30,7 @@
         data-adbar-countdown-active-label="solo quedan..."
         data-adbar-countdown-before-message="SE VIENE TREMENDA PROMO"
         data-adbar-countdown-active-message="APROVECHA LAS 9 CUOTAS,"
-        aria-label="Cuenta regresiva de la promoci&oacute;n de 9 cuotas sin inter&eacute;s en impresoras Bambu Lab"
+        aria-label="Ver promoci&oacute;n de 9 cuotas sin inter&eacute;s en {{ promo_adbar_countdown_scope }}"
         aria-live="polite"
         hidden>
         <div class="adbar-countdown">
@@ -55,7 +57,7 @@
                 </span>
             </span>
         </div>
-    </section>
+    </a>
 {% elseif settings.ad_bar and (num_messages or adbar_images ) %}
     <section class="js-adbar section-adbar {% if num_messages %}adbar-with-messages{% endif %}  {% if show_adbar_only_mobile %}d-md-none{% elseif show_adbar_only_desktop %}d-none d-md-block{% endif %}">
         {% if num_messages %}

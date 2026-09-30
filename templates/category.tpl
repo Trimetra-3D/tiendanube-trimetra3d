@@ -1,3 +1,8 @@
+{% set is_brand_promo = category.handle == 'snapmaker-bambulab' %}
+{% if is_brand_promo %}
+    {% paginate by 12 %}
+    {% include 'snipplets/brand-promo/landing.tpl' %}
+{% else %}
 {% set has_filters_available = products and has_filters_enabled and (filter_categories is not empty or product_filters is not empty) %}
 
 {# Only remove this if you want to take away the theme onboarding advices #}
@@ -79,4 +84,5 @@
 {% elseif show_help %}
 	{# Category Placeholder #}
 	{% include 'snipplets/defaults/show_help_category.tpl' %}
+{% endif %}
 {% endif %}

@@ -11,7 +11,7 @@ const storeJs = await readFile(new URL("static/js/store.js.tpl", rootUrl), "utf8
 
 const countdownMarkup = `
   <header class="head-main">
-    <section class="js-adbar section-adbar section-adbar--countdown" data-adbar-countdown>
+    <a href="https://www.trimetra3d.com.ar/snapmaker-bambulab" class="js-adbar section-adbar section-adbar--countdown" data-adbar-countdown>
       <div class="adbar-countdown">
         <span class="adbar-countdown__message" data-adbar-countdown-message>SE VIENE TREMENDA PROMO</span>
         <span class="adbar-countdown__label" data-adbar-countdown-label></span>
@@ -24,7 +24,7 @@ const countdownMarkup = `
           <span class="adbar-countdown__unit"><strong>59</strong><small>SEGUNDOS</small></span>
         </span>
       </div>
-    </section>
+    </a>
   </header>`;
 
 async function renderCountdown(page, active = false) {
@@ -42,24 +42,31 @@ async function renderCountdown(page, active = false) {
   }
 }
 
-test("contrato de campaña Bambu Lab", () => {
-  expect(promoConfig).toContain("payment_promo_start_date = '2026-08-27'");
-  expect(promoConfig).toContain("payment_promo_end_date = '2026-09-07'");
-  expect(promoConfig).toContain("payment_promo_start_date ~ 'T00:00:00-03:00'");
+test("contrato de campaña Bambu Lab y Snapmaker", () => {
+  expect(promoConfig).toContain("payment_promo_start_date = '2026-09-25'");
+  expect(promoConfig).toContain("payment_promo_end_date = '2026-10-05'");
+  expect(promoConfig).toContain("payment_promo_start_date ~ 'T09:57:00-03:00'");
   expect(promoConfig).toContain("payment_promo_end_date ~ 'T10:00:00-03:00'");
   expect(promoConfig).toContain("payment_promo_countdown = 'true'");
-  expect(promoConfig).toContain("payment_promo_scope = 'impresoras Bambu Lab'");
+  expect(promoConfig).toContain("payment_promo_installments = '9'");
+  expect(promoConfig).toContain("payment_promo_start_time_display = '09:57'");
+  expect(promoConfig).toContain("payment_promo_end_time_display = '10:00'");
+  expect(promoConfig).toContain("payment_promo_label = 'Bambu Lab y Snapmaker'");
+  expect(promoConfig).toContain("payment_promo_scope = 'impresoras Bambu Lab y Snapmaker'");
 
   expect(promoHeader).toContain('data-adbar-countdown-before-message="SE VIENE TREMENDA PROMO"');
   expect(promoHeader).toContain('data-adbar-countdown-active-message="APROVECHA LAS 9 CUOTAS,"');
   expect(promoHeader).toContain('data-adbar-countdown-active-label="solo quedan..."');
   expect(promoHeader).toContain('mode: "promo_countdown"');
+  expect(promoHeader).toContain('mode: "promo_scope"');
+  expect(promoHeader).toContain('en {{ promo_adbar_countdown_scope }}');
 
   expect(promoEligibility).toContain("product.brand");
   expect(promoEligibility).toContain("not payment_promo_product_has_brand");
-  expect(promoEligibility).not.toContain("'snapmaker'");
+  expect(promoEligibility).toContain("'snapmaker' in payment_promo_product_brand");
+  expect(promoEligibility).toContain("'snapmaker' in payment_promo_product_text");
   expect(promoEligibility).not.toContain("'impresora'");
-  for (const accessory of ["filamento", "repuesto", "boquilla", "hotend", "extrusor", "placa", "cama", "ptfe"]) {
+  for (const accessory of ["filamento", "accesorio", "repuesto", "boquilla", "hotend", "extrusor", "placa", "cama", "ptfe"]) {
     expect(promoEligibility).toContain(`'${accessory}'`);
   }
 
@@ -69,16 +76,45 @@ test("contrato de campaña Bambu Lab", () => {
   expect(storeJs).toContain("get_max_installments_without_interests(number_of_installment, installment_data, max_installments_without_interests, max_installments_without_interests_to_show)");
 });
 
-test("límites temporales de la promo", () => {
-  const start = new Date("2026-08-27T00:00:00-03:00").getTime();
-  const end = new Date("2026-09-07T10:00:00-03:00").getTime();
-  const stateAt = (timestamp) => timestamp < start ? "scheduled" : timestamp <= end ? "active" : "ended";
+test("límites temporales con el countdown real de la promo", async ({ page }) => {
+  const configValue = (name) => promoConfig.match(new RegExp(`${name} = '([^']+)'`))[1];
+  const startDate = configValue("payment_promo_start_date") + promoConfig.match(/payment_promo_start_date ~ '([^']+)'/)[1];
+  const endDate = configValue("payment_promo_end_date") + promoConfig.match(/payment_promo_end_date ~ '([^']+)'/)[1];
+  const start = new Date(startDate).getTime();
+  const end = new Date(endDate).getTime();
+  const markup = promoHeader.match(/<a\s[\s\S]*?<\/a>/)[0]
+    .replace("{{ promo_adbar_countdown_start }}", startDate)
+    .replace("{{ promo_adbar_countdown_end }}", endDate)
+    .replace("{{ promo_adbar_countdown_scope }}", configValue("payment_promo_scope"));
+  const countdownScript = storeJs.slice(
+    storeJs.indexOf("function initAdbarCountdown()"),
+    storeJs.indexOf("        initAdbarCountdown();")
+  );
 
-  expect(stateAt(new Date("2026-08-26T23:59:59-03:00").getTime())).toBe("scheduled");
-  expect(stateAt(start)).toBe("active");
-  expect(stateAt(new Date("2026-08-27T09:59:59-03:00").getTime())).toBe("active");
-  expect(stateAt(end)).toBe("active");
-  expect(stateAt(new Date("2026-09-07T10:00:01-03:00").getTime())).toBe("ended");
+  await page.setContent(markup);
+  await page.clock.install({ time: new Date(start - 1000) });
+  await page.clock.pauseAt(new Date(start - 1000));
+  await page.addScriptTag({ content: countdownScript + "\ninitAdbarCountdown();" });
+
+  const bar = page.locator("[data-adbar-countdown]");
+  const message = page.locator("[data-adbar-countdown-message]");
+  for (const [timestamp, state] of [
+    [start - 1000, "scheduled"],
+    [start, "active"],
+    [start + 1000, "active"],
+    [end - 1000, "active"],
+    [end, "active"],
+    [end + 1000, "ended"]
+  ]) {
+    await page.clock.fastForward(timestamp - await page.evaluate(() => Date.now()));
+    if (state === "ended") {
+      await expect(bar).toBeHidden();
+    } else {
+      await expect(bar).toBeVisible();
+      await expect(message).toHaveText(state === "active" ? "APROVECHA LAS 9 CUOTAS," : "SE VIENE TREMENDA PROMO");
+      await expect(bar).toHaveClass(state === "active" ? /section-adbar--countdown-active/ : /section-adbar--countdown$/);
+    }
+  }
 });
 
 for (const viewport of [
