@@ -6,11 +6,12 @@
   "directories": {
     "doc": "docs"
   },
-  "scripts": {
-    "test": "npm run check:custom-pages",
-    "check:custom-pages": "node scripts/check-custom-pages.mjs",
-    "test:e2e:custom-pages": "playwright test"
-  },
+"scripts": {
+  "test": "npm run check:custom-pages",
+  "check:custom-pages": "node scripts/check-custom-pages.mjs",
+  "test:e2e:custom-pages": "playwright test",
+  "deploy:test": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/deploy-test.ps1"
+},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LautaroAyosa/tiendanube-trimetra3d.git"
