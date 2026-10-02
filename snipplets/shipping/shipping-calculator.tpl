@@ -26,11 +26,11 @@
 
 			{% embed "snipplets/forms/form-input.tpl" with{type_tel: true, input_value: cart_zipcode, input_name: 'zipcode', input_custom_class: 'js-shipping-input d-block', input_placeholder: "Tu código postal" | translate, input_aria_label: 'Tu código postal' | translate, input_label: false, input_append_content: true, input_group_custom_class: 'mb-3'} %}
 				{% block input_prepend_content %}
-					<div class="form-label">
+					<div class="form-label product-shipping-title">
 
-						{% include "snipplets/svg/truck.tpl" with {svg_custom_class: "icon-inline svg-icon-text mr-2"} %}
+						{% include "snipplets/svg/delivery.tpl" with {svg_custom_class: "icon-inline svg-icon-text mr-2"} %}
 						<div class="d-inline-block">								
-							{{ "Medios de envío" | translate }}
+							{% if product_detail %}{{ "¿Cuándo te llega?" | translate }}{% else %}{{ "Medios de envío" | translate }}{% endif %}
 						</div>
 					</div>
 

@@ -20,7 +20,7 @@
     offer_negative_discount_percentage: not labels_floating ? true : false,
     group_data_store: labels_floating ? false : true,
     svg_sprites: false,
-    free_shipping_short_wording: true,
+    free_shipping_short_wording: not (labels_floating and product_detail),
     shipping_icon: true,
     shipping_custom_icon: shipping_icon,
     labels_classes: {

@@ -91,7 +91,7 @@
 
 {% set complementary_section_id = 'complementary-products' %}
 
-{% if complementary_products %}
+{% if complementary_products and not complementary_overview_rendered %}
     {{ component(
         'products-section',{
             title: settings.products_complementary_title,

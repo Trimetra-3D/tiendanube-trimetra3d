@@ -77,6 +77,14 @@
 						{% include 'snipplets/product/product-video.tpl' with {video_id: 'yt'} %}
 					{% endif %}
 				</div>
+				{% if has_multiple_slides %}
+					<button type="button" class="js-swiper-product-prev product-gallery-control product-gallery-prev" aria-label="{{ 'Ver imagen anterior' | translate }}" hidden>
+						{% include "snipplets/svg/chevron-left.tpl" with {svg_custom_class: "icon-inline"} %}
+					</button>
+					<button type="button" class="js-swiper-product-next product-gallery-control product-gallery-next" aria-label="{{ 'Ver siguiente imagen' | translate }}">
+						{% include "snipplets/svg/chevron-right.tpl" with {svg_custom_class: "icon-inline"} %}
+					</button>
+				{% endif %}
 			</div>
 			{% if has_multiple_slides %}
 				<div class="js-swiper-product-pagination swiper-pagination position-relative py-3 d-md-none"></div>

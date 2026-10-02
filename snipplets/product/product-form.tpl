@@ -1,4 +1,9 @@
-<div class="pt-md-3 px-md-3 {% if home_main_product %}mt-2 mt-md-0 mb-md-3{% endif %}">
+<div
+    class="product-form-content pt-md-3 px-md-3 {% if home_main_product %}mt-2 mt-md-0 mb-md-3{% endif %}"
+    data-shipping-calculator-enabled="{{ settings.shipping_calculator_product_page ? 'true' : 'false' }}"
+    data-store-has-shipping="{{ store.has_shipping ? 'true' : 'false' }}"
+    data-store-has-branches="{{ store.branches ? 'true' : 'false' }}"
+    data-product-non-shippable="{{ product.is_non_shippable ? 'true' : 'false' }}">
 
     {# Product name and breadcrumbs for product page #}
 
@@ -6,9 +11,9 @@
         {# Product name #}
         <h2 class="h1-md mb-3">{{ product.name }}</h2>
     {% else %}
-        {% embed "snipplets/page-header.tpl" with {container: false, padding: false, page_header_title_class: 'js-product-name mb-3'} %}
-            {% block page_header_text %}{{ product.name }}{% endblock page_header_text %}
-        {% endembed %}
+        <section class="product-heading" data-store="page-title">
+            <h1 class="js-product-name product-heading-title" data-store="product-name-{{ product.id }}">{{ product.name }}</h1>
+        </section>
     {% endif %}
 
     {# Product SKU #}
@@ -25,10 +30,18 @@
     {# Product price #}
 
     {% include 'snipplets/labels.tpl' with {product_detail: true} %}
-    <div class="price-container" data-store="product-price-{{ product.id }}">
+
+    {% set show_product_quantity = product.available and product.display_price %}
+    {% set has_free_shipping = cart.free_shipping.cart_has_free_shipping or cart.free_shipping.min_price_free_shipping.min_price %}
+    {% set has_product_free_shipping = product.free_shipping %}
+    {% set hasDiscount = product.maxPaymentDiscount.value > 0 %}
+
+    <div class="price-container product-pricing" data-store="product-price-{{ product.id }}">
+      <div class="product-price-card" data-has-payment-discount="{{ hasDiscount ? 'true' : 'false' }}">
         {% if not is_subscription_only_product %}
             {# Standard prices for normal products #}
             <div class="js-price-container mb-3">
+                <div class="product-price-label">{{ 'Precio de lista' | translate }}</div>
                 <span class="d-inline-block">
                     <div class="js-price-display h3 font-largest" id="price_display" {% if not product.display_price %}style="display:none;"{% endif %} data-product-price="{{ product.price }}">{% if product.display_price %}{{ product.price | money }}{% endif %}</div>
                 </span>
@@ -68,17 +81,24 @@
         }) }}
 
         {% set installments_info = product.installments_info_from_any_variant %}
-        {% set hasDiscount = product.maxPaymentDiscount.value > 0 %}
         {% set product_max_installments_without_interests = product.get_max_installments(false) %}
-        {% set show_payments_info = settings.product_detail_installments and product.show_installments and product.display_price and installments_info and product_max_installments_without_interests and product_max_installments_without_interests.installment > 1 %}
+        {% set product_installments_has_active_promo = include('snipplets/payment-installments-config.tpl', { mode: 'has_active_promo' }) | trim %}
+        {% set product_promo_is_eligible = include('snipplets/payment-promo-product-eligibility.tpl') | trim %}
+        {% set product_promo_applies = product_installments_has_active_promo == 'true' and product_promo_is_eligible == 'true' %}
+        {% set has_native_installments = installments_info and product_max_installments_without_interests and product_max_installments_without_interests.installment > 1 %}
+        {% set show_payments_info = product.display_price and (product_promo_applies or (settings.product_detail_installments and product.show_installments and has_native_installments)) %}
 
         {% if not home_main_product and (show_payments_info or hasDiscount) %}
-            <div {% if installments_info %}data-toggle="#installments-modal" data-modal-url="modal-fullscreen-payments"{% endif %} class="{% if installments_info %}js-modal-open js-fullscreen-modal-open{% endif %} js-product-payments-container mb-3" {% if not product.display_price or not (product.get_max_installments and product.get_max_installments(false)) %}style="display: none;"{% endif %}>
+            <div {% if installments_info %}data-toggle="#installments-modal" data-modal-url="modal-fullscreen-payments"{% endif %} class="{% if installments_info %}js-modal-open js-fullscreen-modal-open{% endif %} js-product-payments-container mb-3" data-promo-applies="{{ product_promo_applies ? 'true' : 'false' }}" {% if not product.display_price %}style="display: none;"{% endif %}>
         {% endif %}
             {% if show_payments_info %}
                 {% include 'snipplets/product/product-installments-summary.tpl' with {
-                    installments_container_class: 'mb-2'
+                    installments_container_class: '',
+                    product_detail_installments_summary: true
                 } %}
+                <div class="product-payment-logos">
+                    {{ component('payment-shipping-logos', {'type': 'payments'}) }}
+                </div>
             {% endif %}
 
             {% set hideDiscountContainer = not (hasDiscount and product.showMaxPaymentDiscount) %}
@@ -95,36 +115,26 @@
             </div>
         {% if not home_main_product and (show_payments_info or hasDiscount) %}
                 <a id="btn-installments" class="btn-link font-small" {% if not (product.get_max_installments and product.get_max_installments(false)) %}style="display: none;"{% endif %}>
-                  {% if not hasDiscount and not settings.product_detail_installments %}
-                    {{ "Ver medios de pago" | translate }}
-                  {% else %}
-                    {{ "Ver más detalles" | translate }}
-                  {% endif %}
+                    {{ "Ver todos los medios de pago" | translate }}
                 </a>
             </div>
         {% endif %}
+      </div>
 
-        {# Product availability #}
+      <div class="product-availability" aria-live="polite">
+          <span class="js-product-availability-available product-availability-status product-availability-status--available" {% if not product.available %}style="display:none;"{% endif %}>
+              <span class="product-availability-dot" aria-hidden="true"></span>
+              <strong>{{ 'En stock' | translate }}</strong>
+              {% if settings.product_stock and product.selected_or_first_available_variant.stock is not null %}
+                  <span class="product-availability-stock">· {{ 'Quedan' | translate }} <span class="js-product-stock">{{ product.selected_or_first_available_variant.stock }}</span> {{ 'unidades' | translate }}</span>
+              {% endif %}
+          </span>
+          <span class="js-product-availability-unavailable product-availability-status product-availability-status--unavailable" {% if product.available %}style="display:none;"{% endif %}>
+              <span class="product-availability-dot" aria-hidden="true"></span>
+              <strong>{{ 'Sin stock' | translate }}</strong>
+          </span>
+      </div>
 
-        {% set show_product_quantity = product.available and product.display_price %}
-
-        {# Free shipping minimum message #}
-        {% set has_free_shipping = cart.free_shipping.cart_has_free_shipping or cart.free_shipping.min_price_free_shipping.min_price %}
-        {% set has_product_free_shipping = product.free_shipping %}
-
-        {% if not product.is_non_shippable and show_product_quantity and (has_free_shipping or has_product_free_shipping) %}
-            <div class="js-free-shipping-minimum-message free-shipping-message mb-4">
-                <span class="text-accent">{{ "Envío gratis" | translate }}</span>
-                <span {% if has_product_free_shipping %}style="display: none;"{% else %}class="js-shipping-minimum-label"{% endif %}>
-                    {{ "superando los" | translate }} <span>{{ cart.free_shipping.min_price_free_shipping.min_price }}</span>
-                </span>
-                {% if not has_product_free_shipping %}
-                    <div class="js-free-shipping-discount-not-combinable font-small opacity-80 mt-1">
-                        {{ "No acumulable con otras promociones" | translate }}
-                    </div>
-                {% endif %}
-            </div>
-        {% endif %}
     </div>
 
     {% set custom_label = product.getPromotionCustomLabel %}
@@ -151,7 +161,7 @@
 
     {# Product form, includes: Variants, CTA and Shipping calculator #}
 
-     <form id="product_form" class="js-product-form mt-4" method="post" action="{{ store.cart_url }}" data-store="product-form-{{ product.id }}">
+     <form id="product_form" class="js-product-form product-purchase-form mt-4" method="post" action="{{ store.cart_url }}" data-store="product-form-{{ product.id }}">
         <input type="hidden" name="add_to_cart" value="{{product.id}}" />
         {% if template == "product" %}
             {% set show_size_guide = true %}
@@ -166,7 +176,7 @@
             </div>
         {% endif %}
 
-        <div class="row mb-4 {% if settings.product_stock %}mb-md-3{% endif %}">
+        <div class="row product-purchase-actions mb-4 {% if settings.product_stock %}mb-md-3{% endif %}">
             {% if show_product_quantity %}
                 {% set product_quantity_container_class = product.isSubscribable() ? 'col-5 col-md-4 mb-3' %}
                 {% include "snipplets/product/product-quantity.tpl" with {product_quantity_container_class: product_quantity_container_class} %}
@@ -228,7 +238,7 @@
             
             {% set state = store.is_catalog ? 'catalog' : (product.available ? product.display_price ? 'cart' : 'contact' : 'nostock') %}
             {% set texts = {'cart': "Agregar al carrito", 'contact': "Consultar precio", 'nostock': "Sin stock", 'catalog': "Consultar"} %}
-            <div class="{% if show_product_quantity and not product.isSubscribable() %}col-8 col-md-9 pl-3{% else %}col-12{% endif %}">
+            <div class="product-submit-container {% if show_product_quantity and not product.isSubscribable() %}col-8 col-md-9 pl-3{% else %}col-12{% endif %}">
 
                 {# Add to cart CTA #}
 
@@ -279,10 +289,10 @@
 
         {% if template == 'product' %}
 
-            {% set show_product_fulfillment = settings.shipping_calculator_product_page and (store.has_shipping or store.branches) and not product.free_shipping and not product.is_non_shippable %}
+            {% set show_product_fulfillment = (store.has_shipping or store.branches) and not product.is_non_shippable %}
 
             {% if show_product_fulfillment %}
-                <div class="mb-4 pb-2">
+                <div class="product-fulfillment mb-4 pb-2">
                     {# Shipping calculator and branch link #}
 
                     <div id="product-shipping-container" class="product-shipping-calculator list" {% if not product.display_price or not product.has_stock %}style="display:none;"{% endif %} data-shipping-url="{{ store.shipping_calculator_url }}">
@@ -294,6 +304,15 @@
                     {% if store.branches %}
                         {# Link for branches #}
                         {% include "snipplets/shipping/branches.tpl" with {'product_detail': true} %}
+                    {% endif %}
+
+                    {% if not product.is_non_shippable and show_product_quantity and (has_free_shipping or has_product_free_shipping) %}
+                        <div class="js-free-shipping-minimum-message free-shipping-message product-free-shipping-message">
+                            <span>{{ 'Envío' | translate }} <strong class="text-accent">{{ 'gratis' | translate }}</strong></span>
+                            <span {% if has_product_free_shipping %}style="display: none;"{% else %}class="js-shipping-minimum-label"{% endif %}>
+                                {{ 'superando los' | translate }} <span>{{ cart.free_shipping.min_price_free_shipping.min_price }}</span>
+                            </span>
+                        </div>
                     {% endif %}
                 </div>
 

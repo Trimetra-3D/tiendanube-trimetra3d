@@ -2645,6 +2645,50 @@ DOMContentLoaded.addEventOrExecute(() => {
 
 	var default_max_installments_without_interests_to_show = parseInt('{{ include("snipplets/payment-installments-config.tpl", { mode: "base_installments" }) | trim | escape('js') }}', 10) || 3;
 
+    function hydrateProductPaymentLogos() {
+        var target = document.querySelector('.product-payment-logos');
+        if (!target || target.querySelector('img')) {
+            return;
+        }
+
+        var availableLogos = Array.prototype.map.call(
+            document.querySelectorAll('#installments-modal .js-info-payment-method-container img'),
+            function(source) {
+                return {
+                    element: source,
+                    url: source.getAttribute('data-src') || source.getAttribute('src') || ''
+                };
+            }
+        ).filter(function(logo) {
+            return logo.url && logo.url.indexOf('empty-placeholder') === -1;
+        });
+
+        var preferredMethods = ['visa@', 'mastercard@', 'amex@', 'cabal@'];
+        var selectedLogos = preferredMethods.map(function(method) {
+            return availableLogos.find(function(logo) {
+                return logo.url.toLowerCase().indexOf(method) !== -1;
+            });
+        }).filter(Boolean);
+
+        if (!selectedLogos.length) {
+            selectedLogos = availableLogos.slice(0, 4);
+        }
+
+        selectedLogos.slice(0, 4).forEach(function(source) {
+            var logo = source.element.cloneNode(false);
+            logo.className = 'product-payment-logo';
+            logo.src = source.url;
+            logo.removeAttribute('data-src');
+            logo.alt = source.element.alt || '{{ "Medio de pago" | translate | escape('js') }}';
+            target.appendChild(logo);
+        });
+    }
+
+    hydrateProductPaymentLogos();
+    [600, 1800, 3500].forEach(function(delay) {
+        window.setTimeout(hydrateProductPaymentLogos, delay);
+    });
+
 	function get_max_installments_without_interests(number_of_installment, installment_data, max_installments_without_interests, max_installments_without_interests_to_show) {
 	    var installment_number = parseInt(number_of_installment);
 	    if (installment_number > max_installments_without_interests_to_show) {
@@ -2718,6 +2762,13 @@ DOMContentLoaded.addEventOrExecute(() => {
 	        stock.text(variant.stock).show();
 	    {% endif %}
 
+        var availabilityAvailable = parent.find('.js-product-availability-available');
+        var availabilityUnavailable = parent.find('.js-product-availability-unavailable');
+        if (availabilityAvailable.length || availabilityUnavailable.length) {
+            availabilityAvailable.toggle(variant.available);
+            availabilityUnavailable.toggle(!variant.available);
+        }
+
         {# Updates installments on list item and inside payment popup for Payments Apps #}
 
 	    var installment_helper = function($element, amount, price){
@@ -2732,7 +2783,7 @@ DOMContentLoaded.addEventOrExecute(() => {
 	    };
 
 	    var $payments_module = jQueryNuvem(variant.element + ' .js-product-payments-container');
-	    var $installments_summary = jQueryNuvem(variant.element + ' .js-max-installments-container');
+	    var $installments_summary = jQueryNuvem(variant.element + ' .js-max-installments-container, ' + variant.element + ' .js-product-detail-installments-summary');
 	    var max_installments_without_interests_to_show = parseInt($installments_summary.attr('data-max-installments'), 10) || default_max_installments_without_interests_to_show;
 
 	    if (variant.installments_data) {
@@ -2774,7 +2825,11 @@ DOMContentLoaded.addEventOrExecute(() => {
 
 	        var installments_to_use = max_installments_without_interests;
 	        var promo_installments = parseInt($installments_summary.attr('data-promo-installments'), 10);
-	        var promo_applies = $installments_summary.attr('data-promo-eligible') === 'true' && parseInt(installments_to_use[0], 10) === promo_installments;
+	        var configured_promo_applies = $installments_summary.attr('data-promo-eligible') === 'true' && promo_installments > 1;
+	        if (configured_promo_applies && variant.price_number) {
+	            installments_to_use = [promo_installments, variant.price_number / promo_installments];
+	        }
+	        var promo_applies = configured_promo_applies && parseInt(installments_to_use[0], 10) === promo_installments;
 	        $installments_summary.removeClass('item-installments--promo');
 	        if (promo_applies) {
 	            $installments_summary.addClass('item-installments--promo');
@@ -3120,6 +3175,25 @@ stream_videos.forEach(function(player){
 
             var width = window.innerWidth;
 
+            function updateProductGalleryControls(swiperInstance) {
+                if (!swiperInstance || !swiperInstance.el) {
+                    return;
+                }
+
+                var previousControl = swiperInstance.el.querySelector('.js-swiper-product-prev');
+                var nextControl = swiperInstance.el.querySelector('.js-swiper-product-next');
+
+                if (previousControl) {
+                    previousControl.hidden = swiperInstance.isBeginning;
+                    previousControl.setAttribute('aria-hidden', swiperInstance.isBeginning ? 'true' : 'false');
+                }
+
+                if (nextControl) {
+                    nextControl.hidden = swiperInstance.isEnd;
+                    nextControl.setAttribute('aria-hidden', swiperInstance.isEnd ? 'true' : 'false');
+                }
+            }
+
             var productSwiper = null;
             createSwiper(
                 '.js-swiper-product', {
@@ -3165,6 +3239,13 @@ stream_videos.forEach(function(player){
                 },
                 function(swiperInstance) {
                     productSwiper = swiperInstance;
+                    updateProductGalleryControls(swiperInstance);
+                    swiperInstance.on('slideChange', function () {
+                        updateProductGalleryControls(swiperInstance);
+                    });
+                    swiperInstance.on('resize', function () {
+                        updateProductGalleryControls(swiperInstance);
+                    });
                 }
             );
 
