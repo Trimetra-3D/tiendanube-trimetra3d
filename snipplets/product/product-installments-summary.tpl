@@ -22,7 +22,11 @@
         <span class="js-max-installments">
             <span class="product-installments-heading">
                 <strong class="js-installment-amount">{{ installments_to_show }}</strong>
-                <span>{{ 'cuotas sin interés' | translate }}</span>
+                {% if product_detail_installments_summary %}
+                    <span>{{ 'cuotas' | translate }}</span><span class="product-installments-interest">{{ 'sin interés' | translate }}</span>
+                {% else %}
+                    <span>{{ 'cuotas sin interés' | translate }}</span>
+                {% endif %}
             </span>
             <span class="product-installments-value">
                 <span>{{ 'de' | translate }}</span>

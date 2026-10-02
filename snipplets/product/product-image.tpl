@@ -4,21 +4,60 @@
 	{% set has_multiple_slides = product.media_count > 1 or product.video_url %}
 {% endif %}
 
+{% set compact_product_thumbs = template == 'product' and not home_main_product %}
+{% if compact_product_thumbs %}
+    {% set product_image_count = 0 %}
+    {% set product_video_count = product.video_url ? 1 : 0 %}
+    {% set first_remaining_image_index = null %}
+    {% set first_product_video_index = null %}
+    {% for media in product.media %}
+        {% if media.isImage %}
+            {% if product_image_count == 5 %}{% set first_remaining_image_index = loop.index0 %}{% endif %}
+            {% set product_image_count = product_image_count + 1 %}
+        {% elseif media.isVideo %}
+            {% if first_product_video_index is null %}{% set first_product_video_index = loop.index0 %}{% endif %}
+            {% set product_video_count = product_video_count + 1 %}
+        {% endif %}
+    {% endfor %}
+    {% if first_product_video_index is null and product.video_url %}
+        {% set first_product_video_index = product.media_count %}
+    {% endif %}
+{% endif %}
+
 <div class="row" data-store="product-image-{{ product.id }}"> 
 	{% if has_multiple_slides %}
 		<div class="col-md-auto d-none d-md-block pr-0">
-			<div class="product-thumbs-container position-relative">
+			<div class="product-thumbs-container position-relative{% if compact_product_thumbs %} product-thumbs--compact{% endif %}">
 				<div class="text-center d-none d-md-block">
 					<div class="js-swiper-product-thumbs-prev swiper-button-prev swiper-product-thumb-control  svg-icon-text">{% include "snipplets/svg/chevron-up.tpl" with {svg_custom_class: "icon-inline icon-lg"} %}</div>
 				</div>
 				<div class="js-swiper-product-thumbs swiper-product-thumb"> 
 					<div class="swiper-wrapper">
+						{% set visible_product_images = 0 %}
 						{% for media in product.media %}
+							{% if not compact_product_thumbs or (media.isImage and visible_product_images < 5) %}
 							<div class="swiper-slide h-auto w-auto">
 								{% include 'snipplets/product/product-image-thumbs.tpl' %}
 							</div>
+							{% if media.isImage %}{% set visible_product_images = visible_product_images + 1 %}{% endif %}
+							{% endif %}
 						{% endfor %}
-						{% if not home_main_product %}
+						{% if compact_product_thumbs %}
+                            {% if product_image_count > 5 %}
+                                <div class="swiper-slide h-auto w-auto">
+                                    <a href="#" class="js-product-thumb js-product-thumb-modal product-thumb product-thumb--summary" data-thumb-loop="{{ first_remaining_image_index }}" data-thumb-kind="remaining-images" aria-label="{{ 'Ver más imágenes' | translate }}">
+                                        {{ product_image_count - 5 }} {{ 'más' | translate }}
+                                    </a>
+                                </div>
+                            {% endif %}
+                            {% if product_video_count > 0 %}
+                                <div class="swiper-slide h-auto w-auto">
+                                    <a href="#" class="js-product-thumb js-video-thumb product-thumb product-thumb--summary" data-thumb-loop="{{ first_product_video_index }}" data-thumb-kind="videos" aria-label="{{ 'Ver videos del producto' | translate }}">
+                                        {{ product_video_count }} {{ (product_video_count == 1 ? 'video' : 'videos') | translate }}
+                                    </a>
+                                </div>
+                            {% endif %}
+						{% elseif not home_main_product %}
 							{# Video thumb #}
 							<div class="swiper-slide h-auto w-auto">
 								{% include 'snipplets/product/product-video.tpl' with {thumb: true} %}

@@ -2726,6 +2726,14 @@ DOMContentLoaded.addEventOrExecute(() => {
 
 	{# Updates price, installments, labels and CTA on variant change #}
 
+    function syncProductBuyNowState(scope) {
+        scope.find('.js-product-buy-now').each(function(button) {
+            var form = button.closest('form');
+            var nativeButton = form.querySelector('input.js-addtocart');
+            button.disabled = form.dataset.buyNowPending === 'true' || !nativeButton || nativeButton.disabled || !nativeButton.classList.contains('cart');
+            button.setAttribute('aria-disabled', button.disabled ? 'true' : 'false');
+        });
+    }
 	function changeVariant(variant) {
         jQueryNuvem(".js-product-detail .js-shipping-calculator-response").hide();
         jQueryNuvem("#shipping-variant-id").val(variant.id);
@@ -2941,6 +2949,7 @@ DOMContentLoaded.addEventOrExecute(() => {
 
         LS.subscriptionChangeVariant(variant);
         normalizeProductCardCashLabels(parent);
+        syncProductBuyNowState(parent);
 	}
 
 	{# /* // Trigger change variant */ #}
@@ -3175,6 +3184,30 @@ stream_videos.forEach(function(player){
 
             var width = window.innerWidth;
 
+            function updateCompactProductThumbs(swiperInstance) {
+                var gallery = swiperInstance.el.closest('.single-product-gallery');
+                var thumbs = gallery && gallery.querySelector('.product-thumbs--compact');
+                var activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
+                if (!thumbs || !activeSlide) {
+                    return;
+                }
+                var activePosition = Number(activeSlide.getAttribute('data-image-position'));
+                var isVideo = activeSlide.classList.contains('js-product-video-slide');
+                thumbs.querySelectorAll('.js-product-thumb').forEach(function (thumb) {
+                    var position = Number(thumb.getAttribute('data-thumb-loop'));
+                    var kind = thumb.getAttribute('data-thumb-kind');
+                    var selected = kind === 'videos' ? isVideo
+                        : kind === 'remaining-images' ? !isVideo && activePosition >= position
+                        : !isVideo && activePosition === position;
+                    thumb.classList.toggle('selected', selected);
+                    if (selected) {
+                        thumb.setAttribute('aria-current', 'true');
+                    } else {
+                        thumb.removeAttribute('aria-current');
+                    }
+                });
+            }
+
             function updateProductGalleryControls(swiperInstance) {
                 if (!swiperInstance || !swiperInstance.el) {
                     return;
@@ -3192,6 +3225,7 @@ stream_videos.forEach(function(player){
                     nextControl.hidden = swiperInstance.isEnd;
                     nextControl.setAttribute('aria-hidden', swiperInstance.isEnd ? 'true' : 'false');
                 }
+                updateCompactProductThumbs(swiperInstance);
             }
 
             var productSwiper = null;
@@ -3358,13 +3392,36 @@ stream_videos.forEach(function(player){
         return String(image.attr('srcset')); 
     }
 
-    jQueryNuvem(document).on("click", ".js-addtocart:not(.js-addtocart-placeholder)", function (e) {
+    jQueryNuvem(document).on("click", ".js-addtocart:not(.js-addtocart-placeholder), .js-product-buy-now", function (e) {
 
         {# Button variables for transitions on add to cart #}
 
         var $productContainer = jQueryNuvem(this).closest('.js-product-container');
         var $productVariants = $productContainer.find(".js-variation-option");
         var $productButton = $productContainer.find("input[type='submit'].js-addtocart");
+        var isBuyNow = this.classList.contains('js-product-buy-now');
+        var productForm = this.closest('form');
+        var buyNowButton = productForm && productForm.querySelector('.js-product-buy-now');
+        var nativeProductButton = productForm && productForm.querySelector('input.js-addtocart');
+        var buyNowCartUpdated = false;
+        var buyNowConfirmationListener = null;
+
+        if (productForm && productForm.dataset.buyNowPending === 'true') {
+            e.preventDefault();
+            return;
+        }
+        if (isBuyNow) {
+            e.preventDefault();
+            if (!nativeProductButton || nativeProductButton.disabled || !nativeProductButton.classList.contains('cart') || !productForm.reportValidity()) {
+                syncProductBuyNowState($productContainer);
+                return;
+            }
+            productForm.dataset.buyNowPending = 'true';
+            buyNowButton.disabled = true;
+            buyNowButton.setAttribute('aria-disabled', 'true');
+            buyNowButton.setAttribute('aria-busy', 'true');
+            buyNowButton.textContent = '{{ "Agregando..." | translate | escape('js') }}';
+        }
 
         {# Define if event comes from quickshop, product page or cross selling #}
 
@@ -3434,6 +3491,16 @@ stream_videos.forEach(function(player){
             {# Restore button state in case of error #}
 
             function restore_button_initial_state(){
+                if (isBuyNow) {
+                    delete productForm.dataset.buyNowPending;
+                    buyNowButton.removeAttribute('aria-busy');
+                    buyNowButton.textContent = buyNowButton.dataset.buyNowLabel;
+                    if (buyNowConfirmationListener) {
+                        document.removeEventListener(LS.events.productAddedToCart, buyNowConfirmationListener);
+                        buyNowConfirmationListener = null;
+                    }
+                    syncProductBuyNowState($productContainer);
+                }
                 $productButtonAdding.removeClass("active");
                 $productButtonText.fadeIn();
                 $productButtonPlaceholder.removeAttr("style").hide();
@@ -3462,12 +3529,20 @@ stream_videos.forEach(function(player){
 
             const subscriptionValidResult = LS.subscriptionSubmit($productContainer, subscription_callback_error, e);
             if (subscriptionValidResult && subscriptionValidResult.changeCartSubmit) {
+                if (isBuyNow) {
+                    restore_button_initial_state();
+                }
                 return;
             }
 
             {% if settings.ajax_cart %}
 
                 var callback_add_to_cart = function(html_notification_related_products, html_notification_cross_selling) {
+                    if (isBuyNow) {
+                        // The native callback runs before productAddedToCart; it is not enough on its own.
+                        buyNowCartUpdated = true;
+                        return;
+                    }
 
                     {# Fill notification info #}
 
@@ -3702,6 +3777,36 @@ stream_videos.forEach(function(player){
                     restore_button_initial_state();
                 }
                 $prod_form = jQueryNuvem(this).closest("form");
+                if (isBuyNow) {
+                    var requestedQuantity = Number(productForm.elements.quantity.value);
+                    var requestedProduct = Number(productForm.elements.add_to_cart.value);
+                    buyNowConfirmationListener = function(event) {
+                        if (!buyNowCartUpdated || productForm.dataset.buyNowPending !== 'true') {
+                            return;
+                        }
+                        var detail = event.detail || {};
+                        var itemId = Number(detail.cart_item && detail.cart_item.id);
+                        var confirmedItem = Number.isInteger(itemId) && document.querySelector('.js-cart-item[data-item-id="' + itemId + '"][data-store="cart-item-' + requestedProduct + '"]');
+                        // Tiendanube may retry an out-of-stock request with a smaller quantity.
+                        if (!confirmedItem || Number(detail.quantity_added) !== requestedQuantity) {
+                            restore_button_initial_state();
+                            return;
+                        }
+                        document.removeEventListener(LS.events.productAddedToCart, buyNowConfirmationListener);
+                        buyNowConfirmationListener = null;
+                        var checkoutForm = document.querySelector('form.js-ajax-cart-panel[data-store="cart-form"]');
+                        var checkoutButton = checkoutForm && checkoutForm.querySelector('[name="go_to_checkout"]');
+                        var checkoutContainer = checkoutButton && checkoutButton.closest('.js-ajax-cart-submit');
+                        if (!checkoutButton || checkoutButton.disabled || (checkoutContainer && checkoutContainer.style.display === 'none') || !checkoutForm.checkValidity()) {
+                            restore_button_initial_state();
+                            modalOpen('#modal-cart', 'openFullScreenWithoutClick');
+                            return;
+                        }
+                        // Submit the existing native checkout form, only after confirmed full addition.
+                        checkoutForm.requestSubmit(checkoutButton);
+                    };
+                    document.addEventListener(LS.events.productAddedToCart, buyNowConfirmationListener);
+                }
                 LS.addToCartEnhanced(
                     $prod_form,
                     addedToCartCopy,
@@ -3864,6 +3969,59 @@ stream_videos.forEach(function(player){
         jQueryNuvem("#" + shipping_suboptions_id).remove();
         jQueryNuvem('.js-modal-overlay[data-modal-id="#' + shipping_suboptions_id + '"').remove();
     };
+
+    {# PDP presentation only: observe the response generated by the native calculator. #}
+    function productShippingSummaryData(option) {
+        var text = function(selector) {
+            var element = option.querySelector(selector);
+            return element ? element.textContent.replace(/\s+/g, ' ').trim() : '';
+        };
+        return {
+            free: option.dataset.shippingShowPrice === 'true' && Number(option.dataset.shippingCost) === 0,
+            price: text('[data-component="option.price"] p'),
+            date: text('[data-component="option.date"]'),
+            method: text('[data-component="option.name"]')
+        };
+    }
+    var productShipping = document.querySelector('.single-product-page #product-shipping-container');
+    if (productShipping) {
+        var shippingSummary = productShipping.querySelector('.js-product-shipping-summary');
+        var shippingResponse = productShipping.querySelector('.js-shipping-calculator-response');
+        var shippingHead = productShipping.querySelector('.js-shipping-calculator-head');
+        var shippingSpinner = productShipping.querySelector('.js-shipping-calculator-spinner');
+        var fulfillment = productShipping.closest('.product-fulfillment');
+        if (shippingSummary && shippingResponse && shippingHead) {
+            var detailsButton = shippingSummary.querySelector('.js-product-shipping-details');
+            var syncShippingSummary = function() {
+                var delivery = shippingResponse.querySelector('[data-shipping-type="delivery"]');
+                var option = delivery && delivery.closest('.js-shipping-list-item');
+                var ready = option && shippingHead.classList.contains('with-zip') && shippingResponse.style.display !== 'none' && shippingSpinner.style.display === 'none';
+                shippingSummary.hidden = !ready;
+                fulfillment.classList.toggle('product-fulfillment--calculated', Boolean(ready));
+                if (!ready) {
+                    fulfillment.classList.remove('product-fulfillment--details');
+                    detailsButton.setAttribute('aria-expanded', 'false');
+                    return;
+                }
+                var data = productShippingSummaryData(option);
+                shippingSummary.querySelector('.js-product-shipping-summary-price').textContent = data.free ? shippingSummary.dataset.freeLabel : data.price ? shippingSummary.dataset.shippingLabel + ' ' + data.price : data.method;
+                shippingSummary.querySelector('.js-product-shipping-summary-date').textContent = data.date || data.method;
+                var method = shippingSummary.querySelector('.js-product-shipping-summary-method');
+                method.textContent = data.date ? data.method : '';
+                method.hidden = !data.date;
+                shippingSummary.querySelector('.js-product-shipping-summary-zip').textContent = productShipping.querySelector('.js-shipping-calculator-current-zip').textContent.trim();
+            };
+            var shippingObserver = new MutationObserver(syncShippingSummary);
+            shippingObserver.observe(shippingResponse, { childList: true, subtree: true, attributes: true, characterData: true });
+            shippingObserver.observe(shippingHead, { attributes: true, subtree: true, childList: true, characterData: true });
+            shippingObserver.observe(shippingSpinner, { attributes: true });
+            detailsButton.addEventListener('click', function() {
+                var expanded = fulfillment.classList.toggle('product-fulfillment--details');
+                detailsButton.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+            });
+            syncShippingSummary();
+        }
+    }
 
     {# /* // Calculate shipping function */ #}
 

@@ -55,6 +55,22 @@
                         container_classes: "mt-1 mb-2 font-small opacity-60",
                     })
                 }}
+                {% if template == 'product' %}
+                    <div class="js-product-discount-container product-cash-discount" {% if not (hasDiscount and product.showMaxPaymentDiscount and product.display_price) %}style="display:none;"{% endif %}>
+                        <span class="product-cash-discount-badge">{{ product.maxPaymentDiscount.value }}% <span>OFF</span></span>
+                        <div class="product-cash-discount-details">
+                            {{ component('payment-discount-price', {
+                                visibility_condition: hasDiscount,
+                                location: 'product',
+                                container_classes: 'product-cash-discount-price',
+                                text_classes: { price: 'product-cash-price' },
+                            }) }}
+                        </div>
+                    </div>
+                    <div class="js-product-discount-disclaimer font-small opacity-80 mt-1" {% if not product.showMaxPaymentDiscountNotCombinableDisclaimer %}style="display:none;"{% endif %}>
+                        {{ (product.showMaxPaymentDiscountCombinesWithSomeDiscounts ? 'No acumulable con algunas promociones' : 'No acumulable con otras promociones') | translate }}
+                    </div>
+                {% else %}
                 {{ component('payment-discount-price', {
                         visibility_condition: settings.payment_discount_price,
                         location: 'product',
@@ -64,6 +80,7 @@
                         },
                     })
                 }}
+                {% endif %}
             </div>
         {% endif %}
 
@@ -104,6 +121,7 @@
             {% set hideDiscountContainer = not (hasDiscount and product.showMaxPaymentDiscount) %}
             {% set hideDiscountDisclaimer = not product.showMaxPaymentDiscountNotCombinableDisclaimer %}
 
+            {% if template != 'product' %}
             <div class="js-product-discount-container mb-2" {% if hideDiscountContainer %}style="display: none;"{% endif %}>
                 <span class="text-accent">{{ product.maxPaymentDiscount.value }}% {{'de descuento' | translate }}</span> {{'pagando con' | translate }} {{ product.maxPaymentDiscount.paymentProviderName }}
                 <div class="js-product-discount-disclaimer font-small opacity-80 mt-1" {% if hideDiscountDisclaimer %}style="display: none;"{% endif %}>
@@ -113,6 +131,7 @@
                     | translate }}
                 </div>
             </div>
+            {% endif %}
         {% if not home_main_product and (show_payments_info or hasDiscount) %}
                 <a id="btn-installments" class="btn-link font-small" {% if not (product.get_max_installments and product.get_max_installments(false)) %}style="display: none;"{% endif %}>
                     {{ "Ver todos los medios de pago" | translate }}
@@ -176,7 +195,8 @@
             </div>
         {% endif %}
 
-        <div class="row product-purchase-actions mb-4 {% if settings.product_stock %}mb-md-3{% endif %}">
+        {% set show_buy_now = template == 'product' and not home_main_product and settings.ajax_cart and not store.is_catalog and not product.isSubscribable() %}
+        <div class="row product-purchase-actions{% if show_buy_now %} product-purchase-actions--buy-now{% endif %} mb-4 {% if settings.product_stock %}mb-md-3{% endif %}">
             {% if show_product_quantity %}
                 {% set product_quantity_container_class = product.isSubscribable() ? 'col-5 col-md-4 mb-3' %}
                 {% include "snipplets/product/product-quantity.tpl" with {product_quantity_container_class: product_quantity_container_class} %}
@@ -238,6 +258,11 @@
             
             {% set state = store.is_catalog ? 'catalog' : (product.available ? product.display_price ? 'cart' : 'contact' : 'nostock') %}
             {% set texts = {'cart': "Agregar al carrito", 'contact': "Consultar precio", 'nostock': "Sin stock", 'catalog': "Consultar"} %}
+            {% if show_buy_now %}
+                <div class="product-buy-now-container">
+                    <button type="button" class="js-product-buy-now product-buy-now btn btn-primary btn-big btn-block" data-buy-now-label="{{ 'Comprar ahora' | translate }}" aria-disabled="{{ state == 'cart' ? 'false' : 'true' }}" {% if state != 'cart' %}disabled{% endif %}>{{ 'Comprar ahora' | translate }}</button>
+                </div>
+            {% endif %}
             <div class="product-submit-container {% if show_product_quantity and not product.isSubscribable() %}col-8 col-md-9 pl-3{% else %}col-12{% endif %}">
 
                 {# Add to cart CTA #}

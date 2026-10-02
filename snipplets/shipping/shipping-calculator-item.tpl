@@ -10,7 +10,7 @@
     {% set checked_option = false %}
 {% endif %}
 
-<li class="js-shipping-list-item card radio-button-item p-3" data-store="shipping-calculator-item-{{ option.code }}">
+<li class="js-shipping-list-item card radio-button-item p-3" data-store="shipping-calculator-item-{{ option.code }}" data-shipping-cost="{{ option.cost.value }}" data-shipping-show-price="{{ option.show_price ? 'true' : 'false' }}">
     <label class="js-shipping-radio radio-button list-item" data-loop="shipping-radio-{{loop.index}}" data-shipping-type="{% if pickup %}pickup{% else %}delivery{% endif %}" data-component="shipping.option">
         <input
         id="{% if featured_option %}featured-{% endif %}shipping-{{loop.index}}" 

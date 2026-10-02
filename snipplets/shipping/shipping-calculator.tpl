@@ -5,6 +5,27 @@
 {% endif %}
 
 <div data-store="shipping-calculator">
+    {% if product_detail %}
+        <div class="js-product-shipping-summary product-shipping-summary" hidden aria-live="polite" data-free-label="{{ 'Envío gratis' | translate }}" data-shipping-label="{{ 'Envío' | translate }}">
+            <div class="product-shipping-summary-heading">
+                <span class="product-shipping-summary-truck" aria-hidden="true">
+                    <img class="product-shipping-summary-speed" src="{{ 'images/product-shipping-speed.svg' | static_url }}" alt="" />
+                    <img class="product-shipping-summary-truck-image" src="{{ 'images/product-shipping-truck.svg' | static_url }}" alt="" />
+                </span>
+                <span class="js-product-shipping-summary-price"></span>
+            </div>
+            <div class="product-shipping-summary-divider"></div>
+            <div class="product-shipping-summary-arrival">
+                <strong class="js-product-shipping-summary-date"></strong>
+                <span class="js-product-shipping-summary-method"></span>
+            </div>
+            <div class="product-shipping-summary-footer">
+                <img src="{{ 'images/product-shipping-result-pin.svg' | static_url }}" alt="" />
+                <span>{{ 'CP' | translate }} <strong class="js-product-shipping-summary-zip"></strong> ·</span>
+                <button class="js-product-shipping-details product-shipping-summary-details" type="button" aria-expanded="false" aria-controls="product-shipping-details">{{ 'Más detalles' | translate }}</button>
+            </div>
+        </div>
+    {% endif %}
 	<div class="js-shipping-calculator-head shipping-calculator-head position-relative transition-soft {% if cart_zipcode %}with-zip{% else %}with-form{% endif %}">
 		<div class="js-shipping-calculator-with-zipcode {% if cart_zipcode %}js-cart-saved-zipcode transition-up-active{% endif %} w-100 transition-up position-absolute">
 			<div class="row">
@@ -28,7 +49,11 @@
 				{% block input_prepend_content %}
 					<div class="form-label product-shipping-title">
 
-						{% include "snipplets/svg/delivery.tpl" with {svg_custom_class: "icon-inline svg-icon-text mr-2"} %}
+						{% if product_detail %}
+                            <img class="product-shipping-location" src="{{ 'images/product-shipping-location.svg' | static_url }}" width="20" height="20" alt="" />
+                        {% else %}
+                            {% include "snipplets/svg/delivery.tpl" with {svg_custom_class: "icon-inline svg-icon-text mr-2"} %}
+                        {% endif %}
 						<div class="d-inline-block">								
 							{% if product_detail %}{{ "¿Cuándo te llega?" | translate }}{% else %}{{ "Medios de envío" | translate }}{% endif %}
 						</div>
@@ -94,7 +119,7 @@
 	<div class="js-shipping-calculator-spinner pt-3 pb-4" style="display: none;">
 		{% include "snipplets/placeholders/shipping-placeholder.tpl"%}
 	</div>
-	<div class="js-shipping-calculator-response transition-soft {% if product_detail %}list {% else %} radio-buttons-group{% endif %}" style="display: none;"></div>
+	<div {% if product_detail %}id="product-shipping-details"{% endif %} class="js-shipping-calculator-response transition-soft {% if product_detail %}list {% else %} radio-buttons-group{% endif %}" style="display: none;"></div>
 </div>
 
 
