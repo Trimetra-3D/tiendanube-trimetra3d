@@ -65,6 +65,7 @@
                                 container_classes: 'product-cash-discount-price',
                                 text_classes: { price: 'product-cash-price' },
                             }) }}
+                            {% include 'snipplets/product/product-currency.tpl' %}
                         </div>
                     </div>
                     <div class="js-product-discount-disclaimer font-small opacity-80 mt-1" {% if not product.showMaxPaymentDiscountNotCombinableDisclaimer %}style="display:none;"{% endif %}>

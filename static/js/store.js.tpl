@@ -3387,6 +3387,10 @@ stream_videos.forEach(function(player){
 
     {# /* // Add to cart */ #}
 
+    {% if template == 'product' %}
+        {% include 'static/js/product-currency.js.tpl' %}
+    {% endif %}
+
     function getQuickShopImgSrc(element){
         const image = jQueryNuvem(element).closest('.js-quickshop-container').find('img');
         return String(image.attr('srcset')); 

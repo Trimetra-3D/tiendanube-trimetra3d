@@ -1417,10 +1417,18 @@ $color-white: #fff;
     #btn-installments { padding: 0; min-height: 0; color: #016fd0; font-family: "Inter", sans-serif; font-size: 9px; font-weight: 400; line-height: 24px; text-decoration: none; text-transform: none; }
     .product-cash-discount { display: flex; width: 100%; min-height: 42px; margin: 0 !important; border: .8px solid #f05423; border-radius: 6px; overflow: hidden; background: #fef1eb; }
     .product-cash-discount-badge { display: flex; flex-direction: column; justify-content: center; align-items: center; flex: 0 0 34px; background: #f05423; color: #fff; font-family: "Inter", sans-serif; font-size: 9px; font-weight: 800; line-height: 11px; letter-spacing: .22px; }
-    .product-cash-discount-details { display: flex; align-items: center; min-width: 0; padding: 4px 12px 4px 6px; }
+    .product-cash-discount-details { display: flex; align-items: center; min-width: 0; padding: 4px 12px 4px 6px; position: relative; }
     .product-cash-discount-price { display: flex; flex-wrap: wrap; column-gap: 3px; margin: 0; color: #333; font-family: "Inter", sans-serif; font-size: 8px; font-weight: 500; line-height: 18px; }
     .product-cash-discount-price > .product-cash-price { order: 1; flex-basis: 100%; color: #d34010; }
     .product-cash-price { font-size: 13px; font-weight: 600; line-height: 18px; }
+    .product-currency-usd { position: absolute; left: 6px; top: calc(50% + 1px); color: #d34010; font-family: "Inter", sans-serif; font-size: 13px; font-weight: 600; line-height: 18px; white-space: nowrap; }
+    .product-currency-is-usd .product-cash-price { visibility: hidden; }
+    .product-currency-toggle { display: inline-flex; position: absolute; left: 102.4px; top: calc(50% + 2.2px); width: 46px; height: 11px; border: .8px solid #f05423; border-radius: 99px; overflow: hidden; background: #fff; }
+    .product-currency-toggle[hidden], .product-currency-usd[hidden] { display: none; }
+    .product-currency-toggle button { appearance: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 22px; height: 100%; margin: 0; padding: 0 6px; border: 0; background: #fff; color: rgba(51,51,51,.5); font-family: "Poppins", sans-serif; font-size: 7px; font-weight: 600; line-height: 15px; cursor: pointer; }
+    .product-currency-toggle button:last-child { width: 27px; }
+    .product-currency-toggle button[aria-pressed="true"] { background: #f05423; color: #fff; }
+    .product-currency-toggle button:focus-visible { outline: 1px solid #17191c; outline-offset: -2px; }
   }
   .product-availability { min-height: 24px; padding: 10px 0 0; font-family: "Poppins", sans-serif; font-size: 10px; line-height: 24px; }
   .product-availability-stock { font-size: 9px; }
@@ -1465,6 +1473,9 @@ $color-white: #fff;
       .product-cash-discount-badge { flex-basis: 71px; flex-direction: row; gap: 3px; font-size: 11px; }
       .product-cash-discount-price { font-size: 10px; }
       .product-cash-price { font-size: 18px; }
+      .product-currency-usd { font-size: 18px; top: calc(50% + .2px); }
+      .product-currency-toggle { left: 141.4px; top: calc(50% + 1.2px); width: 55.6px; height: 15px; }
+      .product-currency-toggle button { width: 27px; font-size: 9px; }
     }
     .product-availability { padding-top: 20px; font-size: 13px; }
     .product-availability-stock { font-size: 12px; }
