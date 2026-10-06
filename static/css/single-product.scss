@@ -641,11 +641,6 @@ $color-white: #fff;
     font-size: 0.625rem;
   }
 
-  // Keep the independent metafield fallback unless the SDK actually rendered content.
-  .product-short-description-region:has([id^="mova-short-description-ready-"]) > .product-short-description {
-    display: none;
-  }
-
   .product-short-description {
     min-height: 178px;
     padding: 12px 0 7px;
