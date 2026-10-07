@@ -148,6 +148,7 @@
               {% if settings.product_stock and product.selected_or_first_available_variant.stock is not null %}
                   <span class="product-availability-stock">· {{ 'Quedan' | translate }} <span class="js-product-stock">{{ product.selected_or_first_available_variant.stock }}</span> {{ 'unidades' | translate }}</span>
               {% endif %}
+              {% include 'snipplets/product/product-dispatch.tpl' %}
           </span>
           <span class="js-product-availability-unavailable product-availability-status product-availability-status--unavailable" {% if product.available %}style="display:none;"{% endif %}>
               <span class="product-availability-dot" aria-hidden="true"></span>
