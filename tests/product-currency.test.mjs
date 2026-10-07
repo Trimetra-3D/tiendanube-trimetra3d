@@ -35,6 +35,9 @@ test('currency UI, native price updates, invalid quote and expiry remain isolate
    const placement=await toggle.evaluate(e=>({left:getComputedStyle(e).left,top:getComputedStyle(e).top,transform:getComputedStyle(e).transform}));
    if(width===440){assert.equal(placement.left,'58.4px');assert.equal(placement.top,'17px');assert.equal(placement.transform,'matrix(1, 0, 0, 1, 0, -5.5)');}
    else assert.equal(placement.transform,'none');
+   const centers=await toggle.locator('button').evaluateAll(buttons=>buttons.map(e=>{const box=e.getBoundingClientRect(),r=document.createRange();r.selectNodeContents(e);const text=r.getBoundingClientRect();return {width:box.width,dx:Math.abs(text.x+text.width/2-box.x-box.width/2),dy:Math.abs(text.y+text.height/2-box.y-box.height/2)};}));
+   assert.ok(Math.abs(centers[0].width-centers[1].width)<.1);
+   for(const center of centers){assert.ok(center.dx<1);assert.ok(center.dy<2);}
    await toggle.locator('[data-product-currency="USD"]').click();assert.equal(await usd.innerText(),'US$ 884,84');
    const native=page.locator('.js-payment-discount-price-product');assert.equal(await native.textContent(),'$1.318.410,00');
    // Native variant price setter: no adapter discount arithmetic.
