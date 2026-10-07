@@ -19,6 +19,8 @@
             {% include 'snipplets/product/product-complementary-overview.tpl' %}
         {% endif %}
 
+        {% include 'snipplets/product/product-videos.tpl' %}
+
         {% if product.description is not empty or settings.show_product_fb_comment_box %}
             <div class="single-product-long-description">
                 {% include 'snipplets/product/product-description.tpl' %}
